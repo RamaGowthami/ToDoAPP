@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Detail - ToDo App</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        .task-detail-container { max-width: 800px; margin: 0 auto; }
+        .navbar-brand { font-weight: bold; }
+        .completed { text-decoration: line-through; opacity: 0.7; }
+        .task-status { font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-tasks me-2"></i>ToDo App
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/"><i class="fas fa-home me-1"></i>Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/tasks/new"><i class="fas fa-plus me-1"></i>New Task</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mt-4">
+        <div class="task-detail-container">
+            <!-- Header -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <h1 class="display-6"><i class="fas fa-eye text-primary me-2"></i>Task Details</h1>
+                    <p class="text-muted">View and manage task information</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a th:href="@{/tasks/{id}/edit(id=${task.id})}" class="btn btn-primary">
+                        <i class="fas fa-edit me-1"></i>Edit Task
+                    </a>
+                </div>
+            </div>
+
+            <!-- Task Detail Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge" th:classappend="${task.completed ? 'bg-success' : 'bg-primary'}" th:text="${task.completed ? 'Completed' : 'Pending'}">Status</span>
+                        <small class="text-muted" th:text="${#temporals.format(task.createdAt, 'MMM dd, yyyy HH:mm')}">Created Date</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h2 class="card-title" th:classappend="${task.completed ? 'completed' : ''}" th:text="${task.title}">Task Title</h2>
+
+                    <div class="mb-3" th:if="${task.description}">
+                        <h5 class="text-muted"><i class="fas fa-align-left me-1"></i>Description</h5>
+                        <p class="card-text" th:text="${task.description}">Task description</p>
+                    </div>
+                    <div class="mb-3" th:unless="${task.description}">
+                        <h5 class="text-muted"><i class="fas fa-align-left me-1"></i>Description</h5>
+                        <p class="card-text"><em class="text-muted">No description provided</em></p>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="text-muted"><i class="fas fa-calendar-plus me-1"></i>Created</h5>
+                            <p class="card-text" th:text="${#temporals.format(task.createdAt, 'MMM dd, yyyy HH:mm')}">Created Date</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-muted"><i class="fas fa-calendar-check me-1"></i>Last Updated</h5>
+                            <p class="card-text" th:text="${#temporals.format(task.updatedAt, 'MMM dd, yyyy HH:mm')}">Updated Date</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="btn-group" role="group">
+                            <a href="/" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i>Back to Tasks</a>
+                            <a th:href="@{/tasks/{id}/edit(id=${task.id})}" class="btn btn-outline-primary"><i class="fas fa-edit me-1"></i>Edit</a>
+                            <button th:if="${!task.completed}" class="btn btn-outline-success"
+                                    th:attr="data-id=${task.id}" onclick="toggleCompleteEl(this)">
+                                <i class="fas fa-check me-1"></i>Mark Complete
+                            </button>
+                            <button class="btn btn-outline-danger"
+                                    th:attr="data-id=${task.id},data-title=${task.title}" onclick="handleDelete(this)">
+                                <i class="fas fa-trash me-1"></i>Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-4 mt-5">
+        <div class="container">
+            <p>&copy; 2024 ToDo App. Built with Spring Boot and Thymeleaf.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script th:inline="javascript">
+        function confirmDelete(taskId, taskTitle) {
+            return confirm(`Are you sure you want to delete task "${taskTitle}"?`);
+        }
+        function handleDelete(el) {
+            const id = el.dataset.id; const title = el.dataset.title || '';
+            if (confirmDelete(id, title)) { deleteTask(id); }
+        }
+        function deleteTask(taskId) {
+            fetch(`/api/tasks/${taskId}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }})
+            .then(r => r.json()).then(data => {
+                if (data.status === 'success') { window.location.href = '/'; }
+                else { alert('Error deleting task: ' + data.message); }
+            }).catch(err => { console.error('Error:', err); alert('Error deleting task'); });
+        }
+        function toggleCompleteEl(el) {
+            const id = el.dataset.id; toggleComplete(id);
+        }
+        function toggleComplete(taskId) {
+            fetch(`/api/tasks/${taskId}/complete`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }})
+            .then(r => r.json()).then(data => {
+                if (data.status === 'success') { location.reload(); }
+                else { alert('Error updating task: ' + data.message); }
+            }).catch(err => { console.error('Error:', err); alert('Error updating task'); });
+        }
+    </script>
+</body>
+</html>

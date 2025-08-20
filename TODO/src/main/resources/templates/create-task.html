@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Create Task - ToDo App</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+
+    <style>
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-tasks me-2"></i>ToDo App
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">
+                        <i class="fas fa-home me-1"></i>Home
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/tasks/new">
+                        <i class="fas fa-plus me-1"></i>New Task
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<main class="container mt-4">
+    <div class="form-container">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-6">
+                    <i class="fas fa-plus text-primary me-2"></i>Create New Task
+                </h1>
+                <p class="text-muted">Add a new task to your list</p>
+            </div>
+        </div>
+
+        <!-- Create Task Form -->
+        <div class="card">
+            <div class="card-body">
+                <form id="createTaskForm" th:action="@{/api/tasks}" method="post" novalidate>
+                    <div class="mb-3">
+                        <label for="title" class="form-label">
+                            <i class="fas fa-heading me-1"></i>Title <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="title" name="title" required maxlength="255" placeholder="Enter task title" />
+                        <div class="form-text">Title is required and must be between 1-255 characters.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">
+                            <i class="fas fa-align-left me-1"></i>Description
+                        </label>
+                        <textarea class="form-control" id="description" name="description" rows="4" maxlength="1000" placeholder="Enter task description (optional)"></textarea>
+                        <div class="form-text">Description is optional and cannot exceed 1000 characters.</div>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input class="form-check-input" type="checkbox" id="completed" name="completed" />
+                        <label class="form-check-label" for="completed">
+                            <i class="fas fa-check me-1"></i>Mark as completed
+                        </label>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="/" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Tasks
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Create Task
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-light text-center text-muted py-4 mt-5">
+    <div class="container">
+        <p>&copy; 2024 ToDo App. Built with Spring Boot and Thymeleaf.</p>
+    </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Custom JavaScript -->
+<script>
+    document.getElementById('createTaskForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = {
+            title: document.getElementById('title').value.trim(),
+            description: document.getElementById('description').value.trim(),
+            completed: document.getElementById('completed').checked
+        };
+
+        // Validation
+        if (!formData.title) {
+            alert('Title is required');
+            return;
+        }
+
+        if (formData.title.length > 255) {
+            alert('Title cannot exceed 255 characters');
+            return;
+        }
+
+        if (formData.description.length > 1000) {
+            alert('Description cannot exceed 1000 characters');
+            return;
+        }
+
+        // Submit form
+        fetch('/api/tasks', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('Task created successfully!');
+                window.location.href = '/';
+            } else {
+                alert('Error creating task: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error creating task. Please try again.');
+        });
+    });
+</script>
+</body>
+</html>

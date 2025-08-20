@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToDo App - Home</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        .task-card {
+            transition: transform 0.2s;
+        }
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .completed {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .btn-action {
+            margin: 0 2px;
+        }
+        .task-status {
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-tasks me-2"></i>ToDo App
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/tasks/new">
+                            <i class="fas fa-plus me-1"></i>New Task
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h1 class="display-5">
+                    <i class="fas fa-tasks text-primary me-2"></i>My Tasks
+                </h1>
+                <p class="text-muted">Manage your tasks efficiently</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="/tasks/new" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>New Task
+                </a>
+            </div>
+        </div>
+
+        <!-- Tasks List -->
+        <div class="row" th:if="${#lists.isEmpty(tasks)}">
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No tasks found. <a href="/tasks/new" class="alert-link">Create your first task</a>!
+                </div>
+            </div>
+        </div>
+
+        <div class="row" th:if="${!#lists.isEmpty(tasks)}">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-md-6 col-lg-4 mb-4" th:each="task : ${tasks}">
+                        <div class="card task-card h-100" th:classappend="${task.completed ? 'border-success' : 'border-primary'}">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span class="badge" th:classappend="${task.completed ? 'bg-success' : 'bg-primary'}" 
+                                      th:text="${task.completed ? 'Completed' : 'Pending'}">
+                                    Status
+                                </span>
+                                <small class="text-muted" th:text="${#temporals.format(task.createdAt, 'MMM dd, yyyy')}">
+                                    Date
+                                </small>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title" th:classappend="${task.completed ? 'completed' : ''}" 
+                                    th:text="${task.title}">Task Title</h5>
+                                <p class="card-text text-muted" th:if="${task.description}" th:text="${task.description}">
+                                    Task description
+                                </p>
+                                <p class="card-text" th:unless="${task.description}">
+                                    <em class="text-muted">No description</em>
+                                </p>
+                            </div>
+                            <div class="card-footer">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group" role="group">
+                                        <a th:href="@{/tasks/{id}(id=${task.id})}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a th:href="@{/tasks/{id}/edit(id=${task.id})}" 
+                                           class="btn btn-outline-secondary btn-sm">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button th:if="${!task.completed}"
+                                                class="btn btn-outline-success btn-sm"
+                                                th:attr="data-id=${task.id}"
+                                                onclick="toggleCompleteEl(this)">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm"
+                                                th:attr="data-id=${task.id},data-title=${task.title}"
+                                                onclick="handleDelete(this)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="row" th:if="${totalPages > 1}">
+            <div class="col-12">
+                <nav aria-label="Task pagination">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" th:classappend="${!hasPrevious ? 'disabled' : ''}">
+                            <a class="page-link" th:href="@{/(page=${currentPage - 1})}" th:if="${hasPrevious}">
+                                <i class="fas fa-chevron-left"></i> Previous
+                            </a>
+                            <span class="page-link" th:unless="${hasPrevious}">
+                                <i class="fas fa-chevron-left"></i> Previous
+                            </span>
+                        </li>
+                        
+                        <li class="page-item" th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}"
+                            th:classappend="${pageNum == currentPage ? 'active' : ''}">
+                            <a class="page-link" th:href="@{/(page=${pageNum})}" th:text="${pageNum + 1}">1</a>
+                        </li>
+                        
+                        <li class="page-item" th:classappend="${!hasNext ? 'disabled' : ''}">
+                            <a class="page-link" th:href="@{/(page=${currentPage + 1})}" th:if="${hasNext}">
+                                Next <i class="fas fa-chevron-right"></i>
+                            </a>
+                            <span class="page-link" th:unless="${hasNext}">
+                                Next <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Task Count -->
+        <div class="row mt-3">
+            <div class="col-12 text-center">
+                <small class="text-muted">
+                    Showing <span th:text="${#lists.size(tasks)}">0</span> of 
+                    <span th:text="${totalItems}">0</span> tasks
+                </small>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-4 mt-5">
+        <div class="container">
+            <p>&copy; 2024 ToDo App. Built with Spring Boot and Thymeleaf.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script th:inline="javascript">
+        function confirmDelete(taskId, taskTitle) {
+            return confirm(`Are you sure you want to delete task "${taskTitle}"?`);
+        }
+        
+        function handleDelete(el) {
+            const id = el.dataset.id;
+            const title = el.dataset.title || '';
+            if (confirmDelete(id, title)) {
+                deleteTask(id);
+            }
+        }
+
+        function deleteTask(taskId) {
+            fetch(`/api/tasks/${taskId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert('Error deleting task: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting task');
+            });
+        }
+        
+        function toggleCompleteEl(el) {
+            const id = el.dataset.id;
+            toggleComplete(id);
+        }
+
+        function toggleComplete(taskId) {
+            fetch(`/api/tasks/${taskId}/complete`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert('Error updating task: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating task');
+            });
+        }
+    </script>
+</body>
+</html>
