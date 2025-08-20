@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 @RequiredArgsConstructor
 @Slf4j
+@org.springframework.web.bind.annotation.CrossOrigin(origins = "${spring.web.cors.allowed-origins:http://localhost:3000}")
 public class WebController {
 
     private final TaskService taskService;
@@ -95,5 +96,13 @@ public class WebController {
             model.addAttribute("error", "Task not found or error occurred.");
             return "redirect:/";
         }
+    }
+
+    /**
+     * Login page - JWT login for API access.
+     */
+    @GetMapping("/login")
+    public String loginPage() {
+        return "login";
     }
 }

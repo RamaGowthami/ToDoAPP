@@ -86,13 +86,16 @@
         function confirmDelete(taskId, taskTitle) {
             return confirm(`Are you sure you want to delete task "${taskTitle}"?`);
         }
+
+        function authHeaders() {
+            const t = localStorage.getItem('jwtToken');
+            return t ? { 'Authorization': 'Bearer ' + t } : {};
+        }
         
         function toggleComplete(taskId) {
             fetch(`/api/tasks/${taskId}/complete`, {
                 method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
+                headers: Object.assign({ 'Content-Type': 'application/json' }, authHeaders())
             })
             .then(response => response.json())
             .then(data => {
