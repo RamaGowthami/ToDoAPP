@@ -97,4 +97,12 @@ public class WebController {
             return "redirect:/";
         }
     }
+
+    /**
+     * Login page - JWT login for API access.
+     */
+    @GetMapping("/login")
+    public String loginPage() {
+        return "login";
+    }
 }

@@ -66,7 +66,7 @@ public class SecurityConfig {
 
 		if (!requireJwt) {
 			http.authorizeHttpRequests(auth -> auth
-					.requestMatchers("/auth/**", "/", "/index", "/home", "/tasks/**", "/api/**", "/webjars/**", "/css/**", "/js/**").permitAll()
+					.requestMatchers("/auth/**", "/login", "/", "/index", "/home", "/tasks/**", "/api/**", "/webjars/**", "/css/**", "/js/**", "/images/**").permitAll()
 					.anyRequest().permitAll()
 			)
 			.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -75,9 +75,9 @@ public class SecurityConfig {
 		}
 
 		http.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/auth/login").permitAll()
+				.requestMatchers("/auth/login", "/login").permitAll()
 				.requestMatchers(HttpMethod.GET, "/", "/index", "/home", "/tasks/**").permitAll()
-				.requestMatchers("/webjars/**", "/css/**", "/js/**").permitAll()
+				.requestMatchers("/webjars/**", "/css/**", "/js/**", "/images/**").permitAll()
 				.anyRequest().authenticated()
 		)
 		.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -87,4 +87,3 @@ public class SecurityConfig {
 		return http.build();
 	}
 }
-
