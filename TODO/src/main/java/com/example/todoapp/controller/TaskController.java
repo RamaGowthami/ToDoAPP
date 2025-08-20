@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/tasks")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "${spring.web.cors.allowed-origins:http://localhost:3000}")
 public class TaskController {
 
     private final TaskService taskService;
